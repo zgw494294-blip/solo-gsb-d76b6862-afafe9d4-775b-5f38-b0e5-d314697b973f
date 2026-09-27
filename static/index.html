@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>状态键盘试验</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>状态键盘试验</h1>
+    <p class="subtitle">
+      有限状态换能器：导入键盘定义（状态 / 键 / 转移），寻找输出恰好等于目标文字、
+      且结束于终态的<span class="em">最优按键序列</span>。
+    </p>
+  </header>
+
+  <main>
+    <!-- ============ 1. 键盘定义 ============ -->
+    <section class="card">
+      <h2>1 · 键盘定义（JSON）</h2>
+      <p class="hint">
+        需要 <code>states</code>（1～12 个状态）、<code>initial</code>（初态）、
+        <code>finals</code>（非空终态集）、<code>keys</code>（1～12 个键，
+        含唯一 ASCII <code>id</code> 与正整数 <code>cost</code>）、
+        <code>transitions</code>（<code>state / key / output / next</code>，
+        同一状态与键只能有一条，引用必须有效；<code>output</code> 可省略或为空串，表示死键）。
+      </p>
+      <textarea id="jsonInput" spellcheck="false" rows="16"
+        placeholder='{"states": [...], "initial": ..., "finals": [...], "keys": [...], "transitions": [...]}'></textarea>
+      <div class="row">
+        <button id="loadExampleBtn" type="button">载入死键示例</button>
+        <button id="validateBtn" type="button" class="primary">校验定义</button>
+        <span id="validateMsg" class="msg"></span>
+      </div>
+
+      <div id="machineView" class="machine-view" hidden>
+        <h3>状态</h3>
+        <div id="statesView" class="chips"></div>
+        <h3>键</h3>
+        <div class="table-wrap">
+          <table id="keysTable">
+            <thead><tr><th>键 ID</th><th>成本</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <h3>转移表</h3>
+        <div class="table-wrap">
+          <table id="transTable">
+            <thead><tr><th>当前状态</th><th>键</th><th>输出</th><th>下一状态</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. 求解 ============ -->
+    <section class="card">
+      <h2>2 · 目标与求解</h2>
+      <div class="grid">
+        <label class="field">
+          <span>目标文字（至多 100 个 Unicode 码点，按原始码点比较，不做归一化）</span>
+          <textarea id="targetInput" rows="2" spellcheck="false"></textarea>
+          <small id="targetCount" class="muted">0 / 100 码点</small>
+        </label>
+        <label class="field narrow">
+          <span>换键附加成本（0～100）</span>
+          <input id="surchargeInput" type="number" min="0" max="100" step="1" value="2" />
+          <small class="muted">相邻两次按下不同的键时加收，首键不加</small>
+        </label>
+      </div>
+      <div class="row">
+        <button id="solveBtn" type="button" class="primary">寻找最优按键序列</button>
+        <span id="solveMsg" class="msg"></span>
+      </div>
+
+      <!-- 结果 -->
+      <div id="resultView" hidden>
+        <div id="noSolutionBox" class="no-solution" hidden></div>
+        <div id="foundPane">
+          <div id="solutionSummary"></div>
+
+          <h3>逐步演示</h3>
+          <div id="player" class="player">
+            <div class="player-controls">
+              <button id="firstBtn" type="button">⏮ 首步</button>
+              <button id="prevBtn" type="button">◀ 上一步</button>
+              <button id="nextBtn" type="button">下一步 ▶</button>
+              <button id="lastBtn" type="button">末步 ⏭</button>
+              <button id="autoBtn" type="button">▶ 自动播放</button>
+              <span id="stepIndicator" class="step-indicator"></span>
+            </div>
+            <div id="stepDetail" class="step-detail"></div>
+            <div class="progress-wrap">
+              <div class="progress-label">输出进度（绿色为已匹配码点，灰色为剩余目标）</div>
+              <div id="progressBar" class="progress-bar"></div>
+            </div>
+          </div>
+
+          <h3>全部步骤</h3>
+          <div class="table-wrap">
+            <table id="stepsTable">
+              <thead>
+                <tr>
+                  <th>#</th><th>键</th><th>状态</th><th>输出</th>
+                  <th>键成本</th><th>换键附加</th><th>本步成本</th><th>累计成本</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p id="statsLine" class="muted"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    FastAPI + 原生 JavaScript · 成本 = 键成本之和 + 相邻不同键附加成本 ·
+    依次按总成本、按键数、键 ID 序列字典序取最小
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
