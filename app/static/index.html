@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>状态键盘试验</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>状态键盘试验</h1>
+    <p class="subtitle">导入键盘机 JSON，输入目标文字，求总成本最小的按键序列</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="panel-head">
+        <h2>1. 键盘机规格（JSON）</h2>
+        <div class="btn-row">
+          <button id="btn-example" type="button">载入含死键的示例</button>
+          <button id="btn-format" type="button">格式化</button>
+        </div>
+      </div>
+      <textarea id="spec" spellcheck="false" placeholder='{"states": [...], "initial": ..., "finals": [...], "keys": [...], "transitions": [...]}'></textarea>
+      <p class="hint">
+        规格包含：1～12 个状态、初态、非空终态集、1～12 个键（唯一 ASCII ID + 正整数成本）、
+        转移表（当前状态、键、输出串、下一状态；同一状态与键至多一条转移）。
+        某状态下没有转移的键即为「死键」，按下无效。
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2>2. 目标与成本</h2>
+      <div class="field-row">
+        <label for="target">目标文字（≤ 100 个 Unicode 码点，按原始码点比较，不做归一化）</label>
+        <input id="target" type="text" autocomplete="off">
+        <span class="counter" id="target-counter">0 码点</span>
+      </div>
+      <div class="field-row">
+        <label for="switch-cost">换键附加成本（0～100，相邻不同键各计一次，首键不计）</label>
+        <input id="switch-cost" type="number" min="0" max="100" step="1" value="1">
+      </div>
+      <div class="btn-row">
+        <button id="btn-solve" type="button" class="primary">求解</button>
+      </div>
+    </section>
+
+    <section class="panel" id="result-panel" hidden>
+      <h2>3. 结果</h2>
+      <div id="errors" class="errors" hidden></div>
+      <div id="no-solution" class="no-solution" hidden></div>
+      <div id="summary" class="summary" hidden></div>
+
+      <div id="playback" hidden>
+        <div class="btn-row">
+          <button id="btn-prev" type="button">上一步</button>
+          <button id="btn-next" type="button">下一步</button>
+          <button id="btn-play" type="button">自动播放</button>
+          <button id="btn-all" type="button">全部显示</button>
+          <button id="btn-reset" type="button">重置</button>
+        </div>
+        <p id="status-line" class="status-line"></p>
+        <table id="steps-table">
+          <thead>
+            <tr>
+              <th>#</th><th>按键</th><th>状态</th><th>输出</th>
+              <th>键成本</th><th>换键成本</th><th>累计成本</th><th>已产出文本</th>
+            </tr>
+          </thead>
+          <tbody id="steps-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>优化顺序：总成本 → 按键数 → 键 ID 序列字典序。FastAPI 提供计算接口，页面为原生 JavaScript。</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
